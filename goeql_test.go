@@ -1,4 +1,4 @@
-package main
+package goeql
 
 import (
 	"encoding/json"

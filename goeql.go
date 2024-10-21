@@ -1,4 +1,4 @@
-package main
+package goeql
 
 // goeql is a collection of helpers for serializing and deserializing values
 // into the shape EQL and the CipherStash Proxy needs to enable encryption and
