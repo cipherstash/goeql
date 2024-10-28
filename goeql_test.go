@@ -312,6 +312,31 @@ func TestJsonbQuerySerialization(t *testing.T) {
 	}
 }
 
+func TestEJsonPathQueryQuerySerialization(t *testing.T) {
+	value := "$.top"
+	table := "table1"
+	column := "column1"
+	expectedP := "$.top"
+	expectedQ := "ejson_path"
+
+	serializedData, err := EJsonPathQuery(value, table, column)
+	if err != nil {
+		t.Fatalf("SerializeQuery returned error: %v", err)
+	}
+
+	var ec EncryptedColumn
+	if err := json.Unmarshal(serializedData, &ec); err != nil {
+		t.Fatalf("Error unmarshaling serialized data: %v", err)
+	}
+
+	if ec.P != expectedP {
+		t.Errorf("Expected P to be '%s', got '%s'", expectedP, ec.P)
+	}
+	if ec.Q != expectedQ {
+		t.Errorf("Expected Q to be '%s', got '%s'", expectedQ, ec.Q)
+	}
+}
+
 // Test ToEncryptedColumn Function
 func TestToEncryptedColumn(t *testing.T) {
 	tests := []struct {

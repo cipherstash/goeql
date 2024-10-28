@@ -170,6 +170,11 @@ func JsonbQuery(value any, table string, column string) ([]byte, error) {
 	return serializeQuery(value, table, column, "ste_vec")
 }
 
+// EJsonPathQuery serializes an ejson path to be used in an ejson path query
+func EJsonPathQuery(value any, table string, column string) ([]byte, error) {
+	return serializeQuery(value, table, column, "ejson_path")
+}
+
 // serializeQuery produces a jsonb payload used by EQL query functions to perform search operations like equality checks, range queries, and unique constraints.
 func serializeQuery(value any, table string, column string, queryType any) ([]byte, error) {
 	query, err := ToEncryptedColumn(value, table, column, queryType)
@@ -196,16 +201,17 @@ func ToEncryptedColumn(value any, table string, column string, queryType any) (E
 		data := EncryptedColumn{K: "pt", P: str, I: TableColumn{T: table, C: column}, V: 1, Q: nil}
 
 		return data, nil
-	} else {
-		str, err := convertToString(value)
-		if err != nil {
-			return EncryptedColumn{}, fmt.Errorf("error: %v", err)
-		}
-
-		data := EncryptedColumn{K: "pt", P: str, I: TableColumn{T: table, C: column}, V: 1, Q: queryType}
-
-		return data, nil
 	}
+
+	str, err := convertToString(value)
+	if err != nil {
+		return EncryptedColumn{}, fmt.Errorf("error: %v", err)
+	}
+
+	data := EncryptedColumn{K: "pt", P: str, I: TableColumn{T: table, C: column}, V: 1, Q: queryType}
+
+	return data, nil
+
 }
 
 func convertToString(value any) (string, error) {
