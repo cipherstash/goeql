@@ -46,6 +46,11 @@ type EncryptedBool bool
 
 // Serialize turns a EncryptedText value into a jsonb payload for CipherStash Proxy
 func (et EncryptedText) Serialize(table string, column string) ([]byte, error) {
+	// Adding a check based on the go zero value for a string https://go.dev/ref/spec#The_zero_value
+	if len(et) == 0 {
+		return nil, nil
+	}
+
 	val, err := ToEncryptedColumn(string(et), table, column, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing: %v", err)
@@ -55,6 +60,10 @@ func (et EncryptedText) Serialize(table string, column string) ([]byte, error) {
 
 // Deserialize turns a jsonb payload from CipherStash Proxy into an EncryptedText value
 func (et *EncryptedText) Deserialize(data []byte) (EncryptedText, error) {
+	if len(data) == 0 {
+		var EncryptedText EncryptedText
+		return EncryptedText, nil
+	}
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(data, &jsonData); err != nil {
 		return "", err
@@ -69,6 +78,13 @@ func (et *EncryptedText) Deserialize(data []byte) (EncryptedText, error) {
 
 // Serialize turns a EncryptedJsonb value into a jsonb payload for CipherStash Proxy
 func (ej EncryptedJsonb) Serialize(table string, column string) ([]byte, error) {
+	// When setting a jsonb field in xorm to nil || an empty map || not including the field,
+	// the value that comes through here is map[]/
+	// Adding a check based on the go zero value https://go.dev/ref/spec#The_zero_value
+	if len(ej) == 0 {
+		return nil, nil
+	}
+
 	val, err := ToEncryptedColumn(map[string]any(ej), table, column, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing: %v", err)
@@ -78,6 +94,9 @@ func (ej EncryptedJsonb) Serialize(table string, column string) ([]byte, error) 
 
 // Deserialize turns a jsonb payload from CipherStash Proxy into an EncryptedJsonb value
 func (ej *EncryptedJsonb) Deserialize(data []byte) (EncryptedJsonb, error) {
+	if len(data) == 0 {
+		return nil, nil
+	}
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(data, &jsonData); err != nil {
 		return nil, err
@@ -96,8 +115,8 @@ func (ej *EncryptedJsonb) Deserialize(data []byte) (EncryptedJsonb, error) {
 }
 
 // Serialize turns a EncryptedInt value into a jsonb payload for CipherStash Proxy
-func (et EncryptedInt) Serialize(table string, column string) ([]byte, error) {
-	val, err := ToEncryptedColumn(int(et), table, column, nil)
+func (ei EncryptedInt) Serialize(table string, column string) ([]byte, error) {
+	val, err := ToEncryptedColumn(int(ei), table, column, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing: %v", err)
 	}
@@ -105,7 +124,7 @@ func (et EncryptedInt) Serialize(table string, column string) ([]byte, error) {
 }
 
 // Deserialize turns a jsonb payload from CipherStash Proxy into an EncryptedInt value
-func (et *EncryptedInt) Deserialize(data []byte) (EncryptedInt, error) {
+func (ei *EncryptedInt) Deserialize(data []byte) (EncryptedInt, error) {
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(data, &jsonData); err != nil {
 		return 0, fmt.Errorf("error unmarshaling 'p' JSON string: %v", err)
@@ -124,6 +143,11 @@ func (et *EncryptedInt) Deserialize(data []byte) (EncryptedInt, error) {
 
 // Serialize turns a EncryptedBool value into a jsonb payload for CipherStash Proxy
 func (eb EncryptedBool) Serialize(table string, column string) ([]byte, error) {
+	// https: //go.dev/ref/spec#The_zero_value
+	// The zero value for an boolean is false
+	if !eb {
+		return nil, nil
+	}
 	val, err := ToEncryptedColumn(bool(eb), table, column, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing: %v", err)
@@ -194,6 +218,7 @@ func serializeQuery(value any, table string, column string, queryType any) ([]by
 func ToEncryptedColumn(value any, table string, column string, queryType any) (EncryptedColumn, error) {
 	if queryType == nil {
 		str, err := convertToString(value)
+
 		if err != nil {
 			return EncryptedColumn{}, fmt.Errorf("error: %v", err)
 		}
@@ -227,6 +252,7 @@ func convertToString(value any) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error marshaling JSON: %v", err)
 		}
+
 		return string(jsonData), nil
 	case bool:
 		return strconv.FormatBool(v), nil

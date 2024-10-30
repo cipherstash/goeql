@@ -17,13 +17,13 @@ func TestEncryptedText_Serialize(t *testing.T) {
 		t.Fatalf("Serialize returned error: %v", err)
 	}
 
-	desearlizedData, err := et.Deserialize(serializedData)
+	deserializedData, err := et.Deserialize(serializedData)
 	if err != nil {
 		t.Fatalf("Deserialize returned error: %v", err)
 	}
 
-	if !reflect.DeepEqual(desearlizedData, et) {
-		t.Errorf("Expected deserialized value to be '%s', got '%s'", et, desearlizedData)
+	if !reflect.DeepEqual(deserializedData, et) {
+		t.Errorf("Expected deserialized value to be '%s', got '%s'", et, deserializedData)
 	}
 }
 
@@ -71,13 +71,53 @@ func TestEncryptedJsonb_Serialize(t *testing.T) {
 		t.Fatalf("Serialize returned error: %v", err)
 	}
 
-	desearlizedData, err := ej.Deserialize(serializedData)
+	deserializedData, err := ej.Deserialize(serializedData)
 	if err != nil {
 		t.Fatalf("Deserialize returned error: %v", err)
 	}
 
-	if !reflect.DeepEqual(desearlizedData, ej) {
-		t.Errorf("Expected deserialized value to be '%s', got '%s'", ej, desearlizedData)
+	if !reflect.DeepEqual(deserializedData, ej) {
+		t.Errorf("Expected deserialized value to be '%s', got '%s'", ej, deserializedData)
+	}
+}
+func TestNullEncryptedJsonb_Serialize(t *testing.T) {
+	ej := EncryptedJsonb(nil)
+
+	table := "test_table"
+	column := "test_column"
+
+	serializedData, err := ej.Serialize(table, column)
+	if err != nil {
+		t.Fatalf("Serialize returned error: %v", err)
+	}
+
+	deserializedData, err := ej.Deserialize(serializedData)
+	if err != nil {
+		t.Fatalf("Deserialize returned error: %v", err)
+	}
+
+	if !reflect.DeepEqual(deserializedData, ej) {
+		t.Errorf("Expected deserialized value to be '%s', got '%s'", ej, deserializedData)
+	}
+}
+func TestNullEncryptedText_Serialize(t *testing.T) {
+	ej := EncryptedText("")
+
+	table := "test_table"
+	column := "test_column"
+
+	serializedData, err := ej.Serialize(table, column)
+	if err != nil {
+		t.Fatalf("Serialize returned error: %v", err)
+	}
+
+	deserializedData, err := ej.Deserialize(serializedData)
+	if err != nil {
+		t.Fatalf("Deserialize returned error: %v", err)
+	}
+
+	if !reflect.DeepEqual(deserializedData, ej) {
+		t.Errorf("Expected deserialized value to be '%s', got '%s'", ej, deserializedData)
 	}
 }
 
