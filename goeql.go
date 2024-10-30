@@ -145,7 +145,7 @@ func (ei *EncryptedInt) Deserialize(data []byte) (EncryptedInt, error) {
 func (eb EncryptedBool) Serialize(table string, column string) ([]byte, error) {
 	// https: //go.dev/ref/spec#The_zero_value
 	// The zero value for an boolean is false
-	if eb == false {
+	if !eb {
 		return nil, nil
 	}
 	val, err := ToEncryptedColumn(bool(eb), table, column, nil)
