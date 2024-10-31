@@ -406,6 +406,9 @@ func TestToEncryptedColumn(t *testing.T) {
 
 // Test convertToString Function
 func TestConvertToString(t *testing.T) {
+	// the ptr value for unitptr will change between tests
+	// set a mock value to use to confirm the convertToString function works on this uintptr.
+	var mockPtr uintptr = 1374390189136
 	tests := []struct {
 		value       interface{}
 		expectedStr string
@@ -414,9 +417,31 @@ func TestConvertToString(t *testing.T) {
 		{value: "test_string", expectedStr: "test_string", expectError: false},
 		{value: 123, expectedStr: "123", expectError: false},
 		{value: 123.456, expectedStr: "123.456000", expectError: false},
+		{value: int(1), expectedStr: "1", expectError: false},
+		{value: int8(-128), expectedStr: "-128", expectError: false},
+		{value: int8(127), expectedStr: "127", expectError: false},
+		{value: int16(-32768), expectedStr: "-32768", expectError: false},
+		{value: int16(32767), expectedStr: "32767", expectError: false},
+		{value: int32(-2147483648), expectedStr: "-2147483648", expectError: false},
+		{value: int32(2147483647), expectedStr: "2147483647", expectError: false},
+		{value: int64(-9223372036854775808), expectedStr: "-9223372036854775808", expectError: false},
+		{value: int64(9223372036854775807), expectedStr: "9223372036854775807", expectError: false},
+		{value: uint(1), expectedStr: "1", expectError: false},
+		{value: uint8(255), expectedStr: "255", expectError: false},
+		{value: uint16(65535), expectedStr: "65535", expectError: false},
+		{value: uint32(4294967295), expectedStr: "4294967295", expectError: false},
+		{value: uint64(18446744073709551615), expectedStr: "18446744073709551615", expectError: false},
+		{value: float32(123.456), expectedStr: "123.456001", expectError: false},
+		{value: float32(-10.543), expectedStr: "-10.543000", expectError: false},
+		{value: float64(3.1425), expectedStr: "3.142500", expectError: false},
+		{value: float64(-2.7182), expectedStr: "-2.718200", expectError: false},
+		{value: mockPtr, expectedStr: "1374390189136", expectError: false}, //uinttpr type
 		{value: true, expectedStr: "true", expectError: false},
 		{value: map[string]interface{}{"key": "value"}, expectedStr: `{"key":"value"}`, expectError: false},
-		{value: []int{1, 2, 3}, expectedStr: "", expectError: true}, // Unsupported type
+		{value: []int{1, 2, 3}, expectedStr: "[1, 2, 3]", expectError: false},
+		{value: []float64{1.1, 2.2, 3.3}, expectedStr: "[1.100000, 2.200000, 3.300000]", expectError: false},
+		{value: []string{"hello", "world"}, expectedStr: "[hello, world]", expectError: false},
+		{value: []bool{true, false, true}, expectedStr: "[true, false, true]", expectError: false},
 	}
 
 	for _, tt := range tests {
@@ -429,7 +454,7 @@ func TestConvertToString(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error for value: %v, error: %v", tt.value, err)
 			} else if str != tt.expectedStr {
-				t.Errorf("Expected '%s', got '%s' for value: %v", tt.expectedStr, str, tt.value)
+				t.Errorf("Expected '%s', got '%s' for value: %v for type: '%s'", tt.expectedStr, str, tt.value, reflect.TypeOf(tt.value))
 			}
 		}
 	}
