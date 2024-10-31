@@ -14,7 +14,9 @@ package goeql
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 // TableColumn represents the table and column an encrypted value belongs to
@@ -240,12 +242,30 @@ func ToEncryptedColumn(value any, table string, column string, queryType any) (E
 }
 
 func convertToString(value any) (string, error) {
+	// Check for slice types
+	val := reflect.ValueOf(value)
+	// reflect.Slice will return true if it is a slice
+	if val.Kind() == reflect.Slice {
+		strSlice := make([]string, val.Len())
+		for i := 0; i < val.Len(); i++ {
+			elem, err := convertToString(val.Index(i).Interface())
+			if err != nil {
+				return "", err
+			}
+			strSlice[i] = elem
+		}
+		return "[" + strings.Join(strSlice, ", ") + "]", nil
+	}
 	switch v := value.(type) {
+	case fmt.Stringer:
+		return v.String(), nil
 	case string:
 		return v, nil
-	case int:
+	case int, int8, int16, int32, int64:
 		return fmt.Sprintf("%d", v), nil
-	case float64:
+	case uint, uint8, uint16, uint32, uint64, uintptr:
+		return fmt.Sprintf("%d", v), nil
+	case float32, float64:
 		return fmt.Sprintf("%f", v), nil
 	case map[string]any:
 		jsonData, err := json.Marshal(v)
