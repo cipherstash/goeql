@@ -40,6 +40,9 @@ type EncryptedText string
 // EncryptedJsonb is a jsonb value to be encrypted
 type EncryptedJsonb map[string]interface{}
 
+// EncryptedJsonb array value to be encrypted/decrypted
+type EncryptedJsonbArray []interface{}
+
 // EncryptedInt is a int value to be encrypted
 type EncryptedInt int
 
@@ -111,6 +114,44 @@ func (ej *EncryptedJsonb) Deserialize(data []byte) (EncryptedJsonb, error) {
 		}
 
 		return EncryptedJsonb(pData), nil
+	}
+
+	return nil, fmt.Errorf("invalid format: missing 'p' field in JSONB")
+}
+
+// Serialize turns a EncryptedJsonbArray value into a jsonb payload for CipherStash Proxy
+func (eja EncryptedJsonbArray) Serialize(table string, column string) ([]byte, error) {
+	// When setting a jsonb field in xorm to nil || an empty map || not including the field,
+	// the value that comes through here is map[]/
+	// Adding a check based on the go zero value https://go.dev/ref/spec#The_zero_value
+	if len(eja) == 0 {
+		return nil, nil
+	}
+
+	val, err := ToEncryptedColumn([]interface{}(eja), table, column, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error serializing: %v", err)
+	}
+	return json.Marshal(val)
+}
+
+// Deserialize turns a jsonb payload from CipherStash Proxy into an EncryptedJsonbArray value
+func (ej *EncryptedJsonbArray) Deserialize(data []byte) (EncryptedJsonbArray, error) {
+	if len(data) == 0 {
+		return nil, nil
+	}
+	var jsonData map[string]interface{}
+	if err := json.Unmarshal(data, &jsonData); err != nil {
+		return nil, err
+	}
+
+	if pValue, ok := jsonData["p"].(string); ok {
+		var pData []interface{}
+		if err := json.Unmarshal([]byte(pValue), &pData); err != nil {
+			return nil, fmt.Errorf("error unmarshaling 'p' JSON string: %v", err)
+		}
+
+		return EncryptedJsonbArray(pData), nil
 	}
 
 	return nil, fmt.Errorf("invalid format: missing 'p' field in JSONB")
